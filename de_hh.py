@@ -217,61 +217,123 @@ class XCDM(LCDM):
         self.Ok0 = float(Ok0)
         self.Ode0 = float(1-self.Om0-self.Ok0)
         self.w = float(w)
+        self.h = float(h)
 
     def E(self, z):
-        return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(1+z)**(3*(1+w)))
+        return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(1+z)**(3*(1+self.w)))**0.5
     
     def w_de(self, z):
         return self.w
 
-class CG:
-    def __init__(self, Om0, Ok0, As):
+class CG(LCDM):
+    '''
+    This is the class for the Chaplygin gas model (CG), the equation of state of dark energy is p = -A/\rho.
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          Ok0: the current energy density fraction of curvature
+                          radiation neglected
+                          As: constant related to A
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, Ok0, As, h):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Ode0 = float(1-self.Om0-self.Ok0)
         self.As = float(As)
+        self.h = float(h)
         
     def E(self,z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(self.As+(1-self.As)*(1+z)**6)**0.5)**0.5
 
-class GCG:
-    def __init__(self, Om0, Ok0, As, alpha):
+    def ODE(self, z):
+        '''
+        The energy component of dark energy
+        '''
+        return self.E(z)**2-self.Om0*(1+z)**3+self.Ok0*(1+z)**2
+    def ODEp(self, z):
+        return derivative(self.ODE, z, dx = 1e-6)
+    def w_de(self, z):
+        '''
+        The "equivalent" equation of state of dark energy
+        '''
+        return self.ODEp(z)/3/self.ODE(z)*(1+z)-1
+
+class GCG(CG):
+    '''
+    This is the class for the Generalized Chaplygin gas model (GCG), the equation of state of dark energy is p = -A/\rho^\alpha.
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          Ok0: the current energy density fraction of curvature
+                          radiation neglected
+                          As: constant related to A
+                          alpha: a constant in the range 0 < \alpha < 1
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, Ok0, As, alpha, h):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Ode0 = float(1-self.Om0-self.Ok0)
         self.As = float(As)
         self.alpha = float(alpha)
+        self.h  = float(h)
         
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(self.As+(1-self.As)*(1+z)**(3*(1+self.alpha)))**(1/(1+self.alpha)))**0.5
-class W_Linear:
-    def __init__(self, Om0, Ok0, w0 ,w1):
+
+class W_Linear(LCDM):
+    '''
+    This is the class for the dark energy model with a linear parameterization of equation of state of the dark energy: w=w0+w1*z
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          Ok0: the current energy density fraction of curvature
+                          radiation neglected
+                          w0 and w1: constants related to the EoS parameterization
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, Ok0, w0 ,w1, h):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Ode0 = float(1-self.Om0-self.Ok0)
         self.w0 = float(w0)
         self.w1 = float(w1)
+        self.h = float(h)
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(1+z)**(3*(self.w0-self.w1+1))*math.e**(3*self.w1*z))**0.5
 
-class W_CPL:
-    def __init__(self, Om0, Ok0, w0 ,w1):
+    def w_de(self, z):
+        return self.w0+self.w1*z
+
+class W_CPL(LCDM):
+    '''
+    This is the class for the CPL parameterization of the equation of state of dark energy: w=w0+w1*z/(1+z)
+    The input parameters have the same meanings as W_linear class
+    '''
+    def __init__(self, Om0, Ok0, w0 ,w1, h):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Ode0 = float(1-self.Om0-self.Ok0)
         self.w0 = float(w0)
         self.w1 = float(w1)
+        self.h = float(h)
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(1+z)**(3*(self.w0+self.w1+1))*math.e**(-3*self.w1*z/(1+z)))**0.5
+    def w_de(self, z):
+        return self.w0+self.w1*z/(1+z)
 
-class DE_Casimir:
-    def __init__(self, Om0, Ok0, Ocass0):
+class DE_Casimir(CG):
+    '''
+    This is the class for the FRW cosmology with Casimir effect.
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          Ok0: the current energy density fraction of curvature
+                          radiation neglected
+ 
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, Ok0, Ocass0, h):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Ocass0 = float(Ocass0)
         self.Ode0 = float(1-self.Om0-self.Ok0-self.Ocass0)
+        self.h = float(h)
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0-self.Ocass0*(1+z)**4)**0.5
@@ -281,75 +343,167 @@ class CGB:
     def __int__(self, Om0, )
 '''
 
-class DE_Card: ## not from 0604327 (it might be wrong), we use:http://iopscience.iop.org/0004-637X/588/1/1/fulltext/57352.text.html
-    def __init__(self, Om0, Or0, n):
+class DE_Card(LCDM):
+    ## not from 0604327 (it might be wrong), we use:http://iopscience.iop.org/0004-637X/588/1/1/fulltext/57352.text.html
+    ## This is a special model that has nonzero Or0 (radiation is included)
+    '''
+    This is the class for the Cardissian expansion cosmology.
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          The curvature is zero
+                          Or0: the current energy density fraction of radiation
+                          n: constant related to the Cardassian term in the Friedmann equation
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, Or0, n, h):
+        self.Ok0 = float(0)  # assume the curvature is zero
         self.Om0 = float(Om0)
         self.Or0 = float(Or0)
         self.n = float(n)
+        self.h = float(h)
 
     def E(self, z):
         return (self.Om0*(1+z)**4*(1/(1+z)+self.Or0/self.Om0+(1+z)**(4*self.n-4)*(1-self.Or0-self.Om0)/self.Om0*((1/(1+z)+self.Or0/self.Om0)/(1+self.Or0/self.Om0))**self.n))**0.5
+    
+    def ODE(self, z):
+        '''
+        The energy component of dark energy
+        '''
+        return self.E(z)**2-self.Om0*(1+z)**3+self.Or0*(1+z)**4  # Note: different from GC and GCG
+    def ODEp(self, z):
+        return derivative(self.ODE, z, dx = 1e-6)
+    def w_de(self, z):
+        '''
+        The "equivalent" equation of state of dark energy
+        '''
+        return self.ODEp(z)/3/self.ODE(z)*(1+z)-1
 
-class DGP:
-    def __init__(self, Om0, Orc0):
+class DGP(CG):
+    '''
+    This is the class for the DGP cosmology
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          Orc0: bulk-induced term related to a crossover radius.
+                          h: dimensionless Hubble constant    
+    '''
+    def __init__(self, Om0, Orc0, h):
         self.Om0 = float(Om0)
         self.Orc0 = float(Orc0)
-        self.Ok0 = float(1-self.Om0-self.Orc0)
-
+        self.Ok0 = float(1-(np.sqrt(self.Om0+self.Orc0)+np.sqrt(self.Orc0))**2)
+        self.h = float(h)
+    
     def E(self, z):
         return ((np.sqrt(self.Om0*(1+z)**3+self.Orc0)+np.sqrt(self.Orc0))**2+self.Ok0*(1+z)**2)**0.5
-
-class DDG: # according to the paper, redefine r0h0 = r0*H0 to get the constraint condition
-    def __init__(self, Om0, r0h0):
+    '''
+    The equation of state of dark energy is calculated by the same method in CG class: a effective EoS
+    '''
+class DDG(CG): # according to the paper, redefine r0h0 = r0*H0 to get the constraint condition
+    '''
+    This is the class for the DDG cosmology
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          r0h0: constant defined as r0*H0.
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, r0h0, h):
+        self.Ok0 = float(0)  # assume the curvature is zero
         self.Om0 = float(Om0)
         self.r0h0 = float(r0h0)
         self.Ode0 = float(1+1/self.r0h0-self.Om0)
+        self.h =float(h)
 
     def E(self, z):
         return -0.5/self.r0h0+np.sqrt(self.Om0*(1+z)**3+self.Ode0+1/4/self.r0h0**2)
 
-class RS:
-    def __init__(self, Om0, Ok0, Odr0):
+class RS(LCDM):
+    '''
+    This is the class for the RS braneworld cosmology without cosmological constant
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          Ok0: the current energy density fraction of curvature
+                          Odr0: the current energy density fraction from dark radiation
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, Ok0, Odr0, h):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Odr0 = float(Odr0)
         self.Oll0 = float(1-self.Om0-self.Ok0-self.Odr0)
+        self.h = float(h)
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Odr0*(1+z)**4+self.Oll0*(1+z)**6)**0.5
+    
+    def ODE(self, z):
+        '''
+            The energy component of dark energy
+            '''
+        return self.E(z)**2-self.Om0*(1+z)**3+self.Odr0*(1+z)**4  # Note: different from GC, GCG and DE_Card
+    def ODEp(self, z):
+        return derivative(self.ODE, z, dx = 1e-6)
+    def w_de(self, z):
+        '''
+            The "equivalent" equation of state of dark energy
+            '''
+        return self.ODEp(z)/3/self.ODE(z)*(1+z)-1
 
-class RSL:
-    def __init__(self, Om0, Ok0, Odr0, Oll0):
+class RSL(RS):
+    '''
+    This is the class for the RS braneworld cosmology with cosmological constant
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          Ok0: the current energy density fraction of curvature
+                          Odr0: the current energy density fraction from dark radiation
+                          Oll0: the current energy density fraction contributed from brane tension
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, Ok0, Odr0, Oll0, h):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Odr0 = float(Odr0)
         self.Oll0 = float(Oll0)
         self.Ode0 = float(1-self.Om0-self.Ok0-self.Odr0-self.Oll0)
+        self.h = float(h)
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Odr0*(1+z)**4+self.Oll0*(1+z)**6+self.Ode0)**0.5
+    # the calculation of effective equation of state of dark energy is the same as RS model
 
-class Brane1:
-    def __init__(self, Om0, Osig0, Oll0):
+class S_Brane1(CG):
+    '''
+    This is the class for the Shtanov Brane1 cosmology.
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          Ok0: the current energy density fraction of curvature
+                          Osig0: the current energy density fraction from brane tension
+                          Oll0: the current energy density fraction contributed from Planck mass scales in different dimensions
+                          The dark radiation is neglected.
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, Ok0, Osig0, Oll0, h):
         self.Om0 = float(Om0)
+        self. Ok0 = float(Ok0)
         self.Osig0 = float(Osig0)
         self.Oll0 = float(Oll0)
-        self.Ode0 = float((self.Om0+self.Osig0+2*self.Oll0-1)**2/4/self.Oll0-self.Om0-self.Osig0-self.Oll0)
-
-    def E(self, z):
-        return (self.Om0*(1+z)**3+self.Osig0+2*self.Oll0-2*np.sqrt(self.Oll0)*np.sqrt(self.Om0*(1+z)**3+self.Osig0+self.Oll0+self.Ode0))**0.5
-
-class Brane2:
-    def __init__(self, Om0, Osig0, Oll0):
-        self.Om0 = float(Om0)
-        self.Osig0 = float(Osig0)
-        self.Oll0 = float(Oll0)
-        self.Ode0 = float((self.Om0+self.Osig0+2*self.Oll0-1)**2/4/self.Oll0-self.Om0-self.Osig0-self.Oll0)
+        self.Ode0 = float((self.Om0+self.Ok0+self.Osig0+2*self.Oll0-1)**2/4/self.Oll0-self.Om0-self.Osig0-self.Oll0)
+        self.h = float(h)
     
     def E(self, z):
-        return (self.Om0*(1+z)**3+self.Osig0+2*self.Oll0+2*np.sqrt(self.Oll0)*np.sqrt(self.Om0*(1+z)**3+self.Osig0+self.Oll0+self.Ode0))**0.5
+        return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Osig0+2*self.Oll0-2*np.sqrt(self.Oll0)*np.sqrt(self.Om0*(1+z)**3+self.Osig0+self.Oll0+self.Ode0))**0.5
+    # Since the dark radiation is ignored, the dark energy component and its effective equation of state is calculated the same way as CG model.
 
+class S_Brane2(CG):
+    '''
+    This is the class for the Shtanov Brane2 cosmology. 
+    The meanings of the input parameters are the same as Shtanov Brane1 model.
+    '''
+    def __init__(self, Om0, Ok0, Osig0, Oll0, h):
+        self.Om0 = float(Om0)
+        self.Ok0 = float(Ok0)
+        self.Osig0 = float(Osig0)
+        self.Oll0 = float(Oll0)
+        self.Ode0 = float((self.Om0+self.Ok0+self.Osig0+2*self.Oll0-1)**2/4/self.Oll0-self.Om0-self.Osig0-self.Oll0)
+        self.h = float(h)
+    
+    def E(self, z):
+        return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Osig0+2*self.Oll0+2*np.sqrt(self.Oll0)*np.sqrt(self.Om0*(1+z)**3+self.Osig0+self.Oll0+self.Ode0))**0.5
+'''
 class MAG:
+    # find the related papers
     def __init__(self, Om0, Ok0, Ophi0):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
@@ -358,6 +512,7 @@ class MAG:
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ophi0*(1+z)**6+self.Ode0)**0.5
+'''
 # the 8,9,10th models in the paper should be considered more carefully.
 
 
