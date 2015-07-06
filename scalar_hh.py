@@ -11,72 +11,54 @@ try:
 except ImportError:
     print('Scipy is required, please make sure it is installed properly')
 
+from scipy.interpolate import InterpolatedUnivariateSpline
+import scalar_sol
+
 class Quintessence:
-    def __init__(self, xi, yi, zi, Gamma, wm):
+    def __init__(self, xi, yi, zi, Gamma, wm, h):
         self.xi = float(xi)
         self.yi = float(yi)
         self.zi = float(zi)
         self.Gamma = float(Gamma)
         self.wm = float(wm)
+        self.h = float(h)
+        
+        self.Qui = scalar_sol.Quin(self.xi, self.yi, self.zi, self.Gamma, self.wm)
+        self.aas, self.Zs, self.xs, self.ys, self.zs = self.Qui.solu(0) # solve the equation only once, otherwise, the initial conditions will be changed
 
-    def xp(self, x1, y1, z1):
-        self.x1 = float(x1)
-        self.y1 = float(y1)
-        self.z1 = float(z1)
-        return -3*self.x1+np.sqrt(6)/2*self.z1*self.y1**2+3/2*self.x1*((1-self.wm)*self.x1**2+(1+self.wm)*(1-self.y1**2))
+    def E(self, z):
+        # the present day value of x, y, z is the final value of xi, yi, zi in the solution part
+        self.x0 = self.xs[len(self.xs)-1]
+        self.y0 = self.ys[len(self.ys)-1]
+        self.z0 = self.zs[len(self.zs)-1]
+        self.Om0 = 1-(self.x0**2+self.y0**2)
 
-    def yp(self, x2, y2, z2):
-        self.x2 = float(x2)
-        self.y2 = float(y2)
-        self.z2 = float(z2)
-        return -np.sqrt(6)/2*self.z1*self.x1*self.y1+3/2*self.x1*((1-self.wm)*self.x1**2+(1+self.wm)*(1-self.y1**2))
+        self.order = np.argsort(self.Zs)  # the InterpolatedUnivariateSpline requires the first argument must increase
+        self.EE = (self.Om0*(1+self.Zs)**3/(1-self.xs**2-self.ys**2))**0.5
+        self.EEc = InterpolatedUnivariateSpline(self.Zs[self.order], self.EE[self.order], k=3)
+        return self.EEc(z)
 
-    def zp(self, x3, y3, z3):
-        self.x3 = float(x3)
-        self.y3 = float(y3)
-        self.z3 = float(z3)
-        return -np.sqrt(6)*self.x3**2*(self.Gamma-1)*self.x3
+    def Ode(self, z):
+        self.order = np.argsort(self.Zs)
+        self.Ophi = self.xs**2+self.ys**2
+        self.Ophi_in = InterpolatedUnivariateSpline(self.Zs[self.order], self.Ophi[self.order], k=3)
+        return self.Ophi_in(z)
+            
+    def w_de(self, z):
+        self.order = np.argsort(self.Zs)
+        self.w_de1 = (self.xs**2-self.ys**2)/(self.xs**2+self.ys**2)
+        self.w_de_in = InterpolatedUnivariateSpline(self.Zs[self.order], self.w_de1[self.order], k=3)
+        return self.w_de_in(z)
 
-    def solu(self, zz):
-        self.zz = float(zz)
-        self.ai = 0.001
-        self.a = self.ai
-        self.dN = 10**(-3)
-        self.Zi = 1/self.ai - 1
-        self.Z = self.Zi
-        self.x = self.xi
-        self.y = self.yi
-        self.z = self.zi
-        while self.ai < 1/(1+self.zz):
-            self.k1 = self.dN*self.xp(self.xi, self.yi, self.zi)
-            self.l1 = self.dN*self.yp(self.xi, self.yi, self.zi)
-            self.m1 = self.dN*self.zp(self.xi, self.yi, self.zi)
-            
-            self.k2 = self.dN*self.xp(self.xi+self.k1/2, self.yi+self.l1/2, self.zi+self.m1/2)
-            self.l2 = self.dN*self.yp(self.xi+self.k1/2, self.yi+self.l1/2, self.zi+self.m1/2)
-            self.m2 = self.dN*self.zp(self.xi+self.k1/2, self.zi+self.l1/2, self.zi+self.m1/2)
-            
-            self.k3 = self.dN*self.xp(self.xi+self.k2/2, self.yi+self.l2/2, self.zi+self.m2/2)
-            self.l3 = self.dN*self.yp(self.xi+self.k2/2, self.yi+self.l2/2, self.zi+self.m2/2)
-            self.m3 = self.dN*self.zp(self.xi+self.k2/2, self.yi+self.l2/2, self.zi+self.m2/2)
-            
-            self.k4 = self.dN*self.xp(self.xi+self.k3, self.yi+self.l3, self.zi+self.m3)
-            self.l4 = self.dN*self.yp(self.xi+self.k3, self.yi+self.l3, self.zi+self.m3)
-            self.m4 = self.dN*self.zp(self.xi+self.k3, self.yi+self.l3, self.zi+self.m3)
-            
-            self.xi = self.xi+1/6*(self.k1+2*self.k2+2*self.k3+self.k4)
-            self.yi = self.yi+1/6*(self.l1+2*self.l2+2*self.l3+self.l4)
-            self.zi = self.zi+1/6*(self.m1+2*self.m2+2*self.m3+self.m4)
-            
-            self.ai = self.ai*(1+self.dN)
-            self.Zi = 1/self.ai-1
-            self.x = np.append(self.x, self.xi)
-            self.y = np.append(self.y, self.yi)
-            self.z = np.append(self.z, self.zi)
-            self.Z = np.append(self.Z, self.Zi)
-            self.a = np.append(self.a, self.ai)
+    def weff(self, z):
+        self.order = np.argsort(self.Zs)
+        self.weff1 = self.wm+(1-self.wm)*self.xs**2-(1+self.wm)*self.yx**2
+        self.weff_in = InterpolatedUnivariateSpline(self.Zs[self.order], self.weff1[self.order], k=3)
+        return self.weff_in(z)
 
-        return self.a, self.Z, self.x, self.y, self.z
+
+
+
 
 
 
