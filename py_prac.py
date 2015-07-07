@@ -2,45 +2,38 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 import math
-'''
-def ss(x):
-    return x**x+x
-
-a = np.linspace(0,10,10)
-b = map(ss,a)
-print(a,b)
-'''
-
 import de_hh
 import scalar_hh
-import de_hh_q
-'''
-LCDM_nf = de_hh.LCDM_nf(0.3, 0, 0.00004)
-print(map(LCDM_nf.hh, np.linspace(0,1,10)))
+import de_plot
 
 
-DE_Card = de_hh.DE_Card(0.3, 0.0004, 1)
-print(map(DE_Card.hh, np.linspace(0,1,10)))
-
-DDG = de_hh.DDG(0.3, 0.2)
-print(map(DDG.hh, np.linspace(0,1,10)))
-'''
-'''
-Qui = scalar_hh.Quintessence(0.01, 0.01, 2, 1, 0.0)
-a, Z, x, y, z = Qui.solu(0.0)
-#print(Z)
-
-print(len(a))
-w = (x**2-y**2)/(x**2+y**2)
-Oo = x**2+y**2
+Qui = scalar_hh.Quintessence(0.000001, 0.00005, 1, 1, 0.0, 0.7)
+Pha = scalar_hh.Phantom(0.000001, 0.00005, 1, 1, 0.0, 0.7)
+Tac = scalar_hh.Tachyon(0.8, 0.0001, 1, 2, 0.0, 0.7)
+DGC = scalar_hh.DiGhCondensate(0.00085, 0.00085, 1, 0, 0.1, 0.7)
+#z = np.linspace(0,10,100)
+z, D,= Qui.D_solu(2)[:2]
+#w_de_q = map(Qui.q, z)
+#w_de_p = map(Pha.q, z)
+#w_de_t = map(Tac.q, z)
+#w_de_d = map(DGC.q, z)
 plt.figure(1)
-plt.plot(Z,Oo)
+plt.plot(z, D, 'k')
+#plt.plot(z, w_de_p, 'r')
+#plt.plot(z, w_de_t, 'g')
+#plt.plot(z, w_de_d, 'y')
+
 #plt.xlim([0, 10])
-plt.show()
-'''
+
+
 '''
 LCDM = de_hh.LCDM(0.3, 0.001, 0.0005, 0.7)
-z = 10**(np.linspace(-3,1,10))
+z = np.linspace(0,2,100)
+E = map(LCDM.E, z)
+plt.plot(z,E, 'r')
+'''
+
+'''
 weff = map(LCDM.weff, z)
 q = map(LCDM.q, z)
 qq = 1.0/np.array(q)
@@ -94,6 +87,7 @@ w_de = map(DDG.w_de, z)
 plt.plot(z, w_de)
 plt.ylim(-1.5, 1.5)
 '''
+'''
 QL = de_hh_q.q_Linear(0.5, 0.3, 0.7)
 z = np.linspace(0,4, 100)
 q = map(QL.q, z)
@@ -106,6 +100,6 @@ plt.figure(2)
 plt.plot(z,w_de)
 plt.figure(3)
 plt.plot(z,mu)
-
+'''
 
 plt.show()
