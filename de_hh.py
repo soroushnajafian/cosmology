@@ -110,6 +110,22 @@ class LCDM:
         Distance module
         '''
         return np.log10(self.D_L(z))+25
+    
+    def t_H(self):
+        return 9.78/self.h  # the unit is Gyr
+    
+    def chit(self, z):
+        '''
+        It is not a observable, but needed to calculate the lookback time
+        '''
+        self.zz = np.linspace(0, z, 1000)
+        self.ETz = 1.0/np.array((1+self.zz)*(map(self.E, self.zz)))
+        self.ccT = interpolate.splrep(self.zz, self.ETz, s=0)
+        return interpolate.splint(0, z, self.ccT)
+    
+    def LB_T(self, z):
+        return self.t_H()*self.chit(z)  #the unit is Gyr
+    
 
     def Dp(self, z, D, D1):
         '''
@@ -186,7 +202,7 @@ class Topo_defc_2D(LCDM):
 
 class Phan_DE(LCDM):
     '''
-    This is the class for the FRW cosmology with 2D topological defects. The equation of state is w_x = -4/3.
+    This is the class for the FRW cosmology with Phantom dark energy. The equation of state is w_x = -4/3.
     The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
                           Ok0: the current energy density fraction of curvature
                           radiation neglected
@@ -325,7 +341,7 @@ class DE_Casimir(CG):
     The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
                           Ok0: the current energy density fraction of curvature
                           radiation neglected
- 
+                          Ocass0:
                           h: dimensionless Hubble constant
     '''
     def __init__(self, Om0, Ok0, Ocass0, h):
@@ -501,6 +517,127 @@ class S_Brane2(CG):
     
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Osig0+2*self.Oll0+2*np.sqrt(self.Oll0)*np.sqrt(self.Om0*(1+z)**3+self.Osig0+self.Oll0+self.Ode0))**0.5
+
+
+class q_Linear:
+    '''
+    This is the class for the parameterization of deceleration factor: q=q0+q1*z.
+    The input parameters: q0: constant
+                          q1: constant
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, q0, q1, h):
+        self.Ok0 = float(0)
+        self.q0 = float(q0)
+        self.q1 = float(q1)
+        self.h = float(h)
+    '''
+    The following part is model dependent: the expansion factor E(z) and the equation of state of the dark energy
+    '''
+    
+    def E(self, z):
+        return math.e**(self.q1*z)*(1+z)**(1+self.q0-self.q1)
+    
+    def w_de(self, z):
+        print("Geometric description has no meanings of matter and dark energy")
+        return
+    
+    '''
+    The following part is model independent, so they are also used by the other parameterizations.
+    '''
+    
+    def Ep(self, z):
+        '''
+        The derivative of the expansion factor with respect to redshift z
+        '''
+        return derivative(self.E, z, dx = 1e-6)
+    
+    def q(self, z):
+        '''
+        The deceleration factor as a function of redshift z
+        '''
+        return -1.0+(1.0+z)*self.Ep(z)/self.E(z) # it has a direct expression: q = q0 + q1*z
+    
+    def weff(self, z):
+        '''
+        The effective equation of state of the universe, it can be used to read out different era of the universe: radiation-dominated, matter-dominated, and dark energy dominated.
+        '''
+        return -1.0+2.0/3.0*(1.0+z)*self.Ep(z)/self.E(z)
+    
+    def D_H(self):
+        '''
+        The Hubble distance from: David Hogg, arxiv: astro-ph/9905116v4
+        '''
+        return 3000/self.h
+    
+    def chi(self, z):
+        '''
+        It is not a observable, but needed to calculate luminosity distance and others
+        '''
+        self.zz = np.linspace(0, z, 1000)
+        self.Ez = 1.0/np.array((map(self.E, self.zz)))
+        self.cc = interpolate.splrep(self.zz, self.Ez, s=0)
+        return interpolate.splint(0, z, self.cc)
+    
+    def D_L(self, z):
+        '''
+        Luminosity distance
+        '''
+        if self.Ok0 > 0:
+            return self.D_H()*(1+z)/np.sqrt(self.Ok0)*math.sinh(np.sqrt(self.Ok0)*self.chi(z))
+        elif self.Ok0 == 0:
+            return self.D_H()*(1+z)*self.chi(z)
+        else:
+            return self.D_H()*(1+z)/np.sqrt(-self.Ok0)*math.sin(np.sqrt(-self.Ok0)*self.chi(z))
+
+    def D_A(self, z):
+        '''
+        Angular diameter distance
+        '''
+        return self.D_L(z)/(1+z)**2
+
+    def D_C(self, z):
+        '''
+        Line of sight comoving distance
+        '''
+        return self.D_H()*self.chi(z)
+
+    def D_M(self, z):
+        '''
+        Transverse comoving distance
+        '''
+        return self.D_L(z)/(1+z)
+
+    def mu(self, z):
+        '''
+        Distance module
+        '''
+        return np.log10(self.D_L(z))+25
+
+    def D_solu(self, z):
+        print("No solution to growth rate and growth factor")
+        return
+
+class q_CPL(q_Linear):
+    '''
+    This is the class for the parameterization of deceleration factor: q=q0+q1*z/(1+z).
+    The input parameters: q0: constant
+                          q1: constant
+    h: dimensionless Hubble constant
+    '''
+    def __init__(self, q0, q1, h):
+        self.Ok0 = float(0)
+        self.q0 = float(q0)
+        self.q1 = float(q1)
+        self.h = float(h)
+    '''
+    The following part is model dependent: the expansion factor E(z) and the equation of state of the dark energy
+    '''
+    
+    def E(self, z):
+        return math.e**(-self.q1*z/(1+z))*(1+z)**(1+self.q0+self.q1)
+
+
 '''
 class MAG:
     # find the related papers
