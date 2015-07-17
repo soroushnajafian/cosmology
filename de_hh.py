@@ -37,6 +37,12 @@ class LCDM:
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Or0*(1+z)**4+self.Ok0*(1+z)**2+self.Ode0)**0.5
     
+    def Ed(self, z):
+        '''
+        Calculate the H(z)/(1+z)
+        '''
+        return self.E(z)/(1+z)
+    
     def w_de(self, z):
         return -1
     
@@ -142,7 +148,7 @@ class LCDM:
 
     def D_solu(self, z):
         '''
-        Solve the differential equation of D(z). The outputs are redshift, D, dD/dz, and f = dlnD/dlnz
+        Solve the differential equation of D(z). The outputs are redshift, D, dD/dz, and f = dlnD/dlna
         '''
         self.z0 = 0
         self.dz = 10**(-4)
@@ -492,12 +498,15 @@ class S_Brane1(CG):
     '''
     def __init__(self, Om0, Ok0, Osig0, Oll0, h):
         self.Om0 = float(Om0)
-        self. Ok0 = float(Ok0)
+        self.Ok0 = float(Ok0)
         self.Osig0 = float(Osig0)
         self.Oll0 = float(Oll0)
-        self.Ode0 = float((self.Om0+self.Ok0+self.Osig0+2*self.Oll0-1)**2/4/self.Oll0-self.Om0-self.Osig0-self.Oll0)
+        self.Ode0 = float((self.Om0+self.Ok0+self.Osig0+2*self.Oll0-1)**2.0/4.0/self.Oll0-self.Om0-self.Osig0-self.Oll0)
         self.h = float(h)
-    
+        #print(self.Om0+self.Ok0+self.Osig0+2*self.Oll0)
+        if self.Om0+self.Ok0+self.Osig0+2*self.Oll0 - 1 < 0:
+            print('Warning: S_Brane1: The parameters are not appropriate, please choose model: S_Brane2')
+
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Osig0+2*self.Oll0-2*np.sqrt(self.Oll0)*np.sqrt(self.Om0*(1+z)**3+self.Osig0+self.Oll0+self.Ode0))**0.5
     # Since the dark radiation is ignored, the dark energy component and its effective equation of state is calculated the same way as CG model.
@@ -512,8 +521,11 @@ class S_Brane2(CG):
         self.Ok0 = float(Ok0)
         self.Osig0 = float(Osig0)
         self.Oll0 = float(Oll0)
-        self.Ode0 = float((self.Om0+self.Ok0+self.Osig0+2*self.Oll0-1)**2/4/self.Oll0-self.Om0-self.Osig0-self.Oll0)
+        self.Ode0 = float((self.Om0+self.Ok0+self.Osig0+2.0*self.Oll0-1.0)**2.0/4.0/self.Oll0-self.Om0-self.Osig0-self.Oll0)
         self.h = float(h)
+        #print(self.Om0+self.Ok0+self.Osig0+2*self.Oll0)
+        if self.Om0+self.Ok0+self.Osig0+2*self.Oll0 - 1 > 0:
+            print('Warning: S_Brane2: The parameters are not appropriate, please choose model: S_Brane1')
     
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Osig0+2*self.Oll0+2*np.sqrt(self.Oll0)*np.sqrt(self.Om0*(1+z)**3+self.Osig0+self.Oll0+self.Ode0))**0.5
@@ -537,6 +549,12 @@ class q_Linear:
     
     def E(self, z):
         return math.e**(self.q1*z)*(1+z)**(1+self.q0-self.q1)
+    
+    def Ed(self, z):
+        '''
+        Calculate the H(z)/(1+z)
+        '''
+        return self.E(z)/(1+z)
     
     def w_de(self, z):
         print("Geometric description has no meanings of matter and dark energy")
