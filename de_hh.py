@@ -271,8 +271,10 @@ class CG(LCDM):
         The energy component of dark energy
         '''
         return self.E(z)**2-self.Om0*(1+z)**3+self.Ok0*(1+z)**2
+    
     def ODEp(self, z):
         return derivative(self.ODE, z, dx = 1e-6)
+    
     def w_de(self, z):
         '''
         The "equivalent" equation of state of dark energy
@@ -391,8 +393,10 @@ class DE_Card(LCDM):
         The energy component of dark energy
         '''
         return self.E(z)**2-self.Om0*(1+z)**3+self.Or0*(1+z)**4  # Note: different from GC and GCG
+    
     def ODEp(self, z):
         return derivative(self.ODE, z, dx = 1e-6)
+    
     def w_de(self, z):
         '''
         The "equivalent" equation of state of dark energy
@@ -669,6 +673,29 @@ class MAG:
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ophi0*(1+z)**6+self.Ode0)**0.5
 '''
 # the 8,9,10th models in the paper should be considered more carefully.
+
+class EDE(CG):
+    '''
+    This is the class for the early dark energy model.
+    The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
+                          Ode: the energy density fraction of early dark energy
+                          w0: equation of state
+                          h: dimensionless Hubble constant
+    '''
+    def __init__(self, Om0, Ode, w0, h):
+        self.Om0 = float(Om0)
+        self.Ok0 = float(0)
+        self.Ode = float(Ode)
+        self.w0 = float(w0)
+        self.Od0 = float(1.0-self.Om0)
+        self.h = float(h)
+    '''
+        The following part is model dependent: the expansion factor E(z) and the equation of state of the dark energy
+        '''
+    
+    def E(self, z):
+        self.Od = (self.Od0-self.Ode*(1-(1+z)**(3*self.w0)))/(self.Od0+self.Om0*(1+z)**(-3*self.w0))+self.Ode*(1-(1+z)**(3*self.w0))
+        return (self.Om0*(1+z)**3/(1-self.Od))**0.5
 
 
 
