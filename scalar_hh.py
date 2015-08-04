@@ -127,6 +127,21 @@ class Quintessence:
         Transverse comoving distance
         '''
         return self.D_L(z)/(1+z)
+    
+    def D_V(self, z):    #   zzx!!! for BAO use
+        '''
+        volume averaged distance
+        '''
+        return (z*self.D_Hz(z)*self.D_M(z)**2)**(1.0/3.0)
+
+    def rd(self, Omu, Oba):
+        '''
+        Use the numerically calibrated approximation to calculate the sound horizon at the drag epoch. Added two parameters Omu and Oba have prior from CMB or other experiments. This function is only for BAO use. For some models with different neutrino theories, it should be changed.
+            '''
+        self.Omu = float(Omu)
+        self.Oba = float(Oba)
+        
+        return 55.154*np.exp(-72.3*(self.Omu*self.h**2.0+0.0006)**2.0)/(self.Om0*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807
 
     def mu(self, z):
         '''

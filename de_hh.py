@@ -31,6 +31,7 @@ class LCDM:
         self.Or0 = float(Or0)
         self.Ode0 = float(1-self.Om0-self.Or0-self.Ok0)
         self.h = float(h)
+        self.modelN = 4
     '''
     The following part is model dependent: the expansion factor E(z) and the equation of state of the dark energy
     '''
@@ -73,6 +74,12 @@ class LCDM:
         '''
         return 3000/self.h
     
+    def D_Hz(self, z):#  zzx!!! for BAO use
+        '''
+        redshift dependent hubble radius
+        '''
+        return self.D_H()/self.E(z)
+    
     def chi(self, z):
         '''
         It is not a observable, but needed to calculate luminosity distance and others
@@ -105,11 +112,25 @@ class LCDM:
         '''
         return self.D_H()*self.chi(z)
     
-    def D_M(self, z):
+    def D_M(self, z):    #  zzx!!! for BAO use
         '''
         Transverse comoving distance
         '''
         return self.D_L(z)/(1+z)
+    
+    def D_V(self, z):    #   zzx!!! for BAO use
+        '''
+        volume averaged distance
+        '''
+        return (z*self.D_Hz(z)*self.D_M(z)**2)**(1.0/3.0)
+    
+    def rd(self, Omu, Oba):
+        '''
+        Use the numerically calibrated approximation to calculate the sound horizon at the drag epoch. Added two parameters Omu and Oba have prior from CMB or other experiments. This function is only for BAO use. For some models with different neutrino theories, it should be changed.
+        '''
+        self.Omu = float(Omu)
+        self.Oba = float(Oba)
+        return 55.154*np.exp(-72.3*(self.Omu*self.h**2.0+0.0006)**2.0)/(self.Om0*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807
 
     def mu(self, z):
         '''
@@ -199,6 +220,7 @@ class Topo_defc_2D(LCDM):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Otopo = float(1-self.Om0-self.Ok0)
+        self.modelN = 3
         
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Otopo*(1+z))**0.5
@@ -218,6 +240,7 @@ class Phan_DE(LCDM):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Oph = float(1-self.Om0-self.Ok0)
+        self.modelN = 3
     
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Oph*(1+z)**(-1))**0.5
@@ -240,6 +263,7 @@ class XCDM(LCDM):
         self.Ode0 = float(1-self.Om0-self.Ok0)
         self.w = float(w)
         self.h = float(h)
+        self.modelN = 4
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(1+z)**(3*(1+self.w)))**0.5
@@ -262,6 +286,7 @@ class CG(LCDM):
         self.Ode0 = float(1-self.Om0-self.Ok0)
         self.As = float(As)
         self.h = float(h)
+        self.modelN = 4
         
     def E(self,z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(self.As+(1-self.As)*(1+z)**6)**0.5)**0.5
@@ -298,6 +323,7 @@ class GCG(CG):
         self.As = float(As)
         self.alpha = float(alpha)
         self.h  = float(h)
+        self.modelN = 5
         
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(self.As+(1-self.As)*(1+z)**(3*(1+self.alpha)))**(1/(1+self.alpha)))**0.5
@@ -318,6 +344,7 @@ class W_Linear(LCDM):
         self.w0 = float(w0)
         self.w1 = float(w1)
         self.h = float(h)
+        self.modelN = 5
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(1+z)**(3*(self.w0-self.w1+1))*math.e**(3*self.w1*z))**0.5
@@ -337,6 +364,7 @@ class W_CPL(LCDM):
         self.w0 = float(w0)
         self.w1 = float(w1)
         self.h = float(h)
+        self.modelN = 5
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0*(1+z)**(3*(self.w0+self.w1+1))*math.e**(-3*self.w1*z/(1+z)))**0.5
@@ -358,6 +386,7 @@ class DE_Casimir(CG):
         self.Ocass0 = float(Ocass0)
         self.Ode0 = float(1-self.Om0-self.Ok0-self.Ocass0)
         self.h = float(h)
+        self.modelN = 4
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Ode0-self.Ocass0*(1+z)**4)**0.5
@@ -384,6 +413,7 @@ class DE_Card(LCDM):
         self.Or0 = float(Or0)
         self.n = float(n)
         self.h = float(h)
+        self.modelN = 4
 
     def E(self, z):
         return (self.Om0*(1+z)**4*(1/(1+z)+self.Or0/self.Om0+(1+z)**(4*self.n-4)*(1-self.Or0-self.Om0)/self.Om0*((1/(1+z)+self.Or0/self.Om0)/(1+self.Or0/self.Om0))**self.n))**0.5
@@ -415,6 +445,7 @@ class DGP(CG):
         self.Orc0 = float(Orc0)
         self.Ok0 = float(1-(np.sqrt(self.Om0+self.Orc0)+np.sqrt(self.Orc0))**2)
         self.h = float(h)
+        self.modelN = 3
     
     def E(self, z):
         return ((np.sqrt(self.Om0*(1+z)**3+self.Orc0)+np.sqrt(self.Orc0))**2+self.Ok0*(1+z)**2)**0.5
@@ -434,6 +465,7 @@ class DDG(CG): # according to the paper, redefine r0h0 = r0*H0 to get the constr
         self.r0h0 = float(r0h0)
         self.Ode0 = float(1+1/self.r0h0-self.Om0)
         self.h =float(h)
+        self.modelN = 3
 
     def E(self, z):
         return -0.5/self.r0h0+np.sqrt(self.Om0*(1+z)**3+self.Ode0+1/4/self.r0h0**2)
@@ -452,6 +484,7 @@ class RS(LCDM):
         self.Odr0 = float(Odr0)
         self.Oll0 = float(1-self.Om0-self.Ok0-self.Odr0)
         self.h = float(h)
+        self.modelN = 4
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Odr0*(1+z)**4+self.Oll0*(1+z)**6)**0.5
@@ -485,6 +518,7 @@ class RSL(RS):
         self.Oll0 = float(Oll0)
         self.Ode0 = float(1-self.Om0-self.Ok0-self.Odr0-self.Oll0)
         self.h = float(h)
+        self.modelN = 5
 
     def E(self, z):
         return (self.Om0*(1+z)**3+self.Ok0*(1+z)**2+self.Odr0*(1+z)**4+self.Oll0*(1+z)**6+self.Ode0)**0.5
@@ -507,6 +541,7 @@ class S_Brane1(CG):
         self.Oll0 = float(Oll0)
         self.Ode0 = float((self.Om0+self.Ok0+self.Osig0+2*self.Oll0-1)**2.0/4.0/self.Oll0-self.Om0-self.Osig0-self.Oll0)
         self.h = float(h)
+        self.modelN = 5
         #print(self.Om0+self.Ok0+self.Osig0+2*self.Oll0)
         if self.Om0+self.Ok0+self.Osig0+2*self.Oll0 - 1 < 0:
             print('Warning: S_Brane1: The parameters are not appropriate, please choose model: S_Brane2')
@@ -527,6 +562,7 @@ class S_Brane2(CG):
         self.Oll0 = float(Oll0)
         self.Ode0 = float((self.Om0+self.Ok0+self.Osig0+2.0*self.Oll0-1.0)**2.0/4.0/self.Oll0-self.Om0-self.Osig0-self.Oll0)
         self.h = float(h)
+        self.modelN = 5
         #print(self.Om0+self.Ok0+self.Osig0+2*self.Oll0)
         if self.Om0+self.Ok0+self.Osig0+2*self.Oll0 - 1 > 0:
             print('Warning: S_Brane2: The parameters are not appropriate, please choose model: S_Brane1')
@@ -547,6 +583,7 @@ class q_Linear:
         self.q0 = float(q0)
         self.q1 = float(q1)
         self.h = float(h)
+        self.modelN = 3
     '''
     The following part is model dependent: the expansion factor E(z) and the equation of state of the dark energy
     '''
@@ -591,6 +628,12 @@ class q_Linear:
         The Hubble distance from: David Hogg, arxiv: astro-ph/9905116v4
         '''
         return 3000/self.h
+        
+    def D_Hz(self, z):#  zzx!!! for BAO use
+        '''
+        redshift dependent hubble radius
+        '''
+        return self.D_H()/self.E(z)
     
     def chi(self, z):
         '''
@@ -629,6 +672,20 @@ class q_Linear:
         Transverse comoving distance
         '''
         return self.D_L(z)/(1+z)
+    
+    def D_V(self, z):    #   zzx!!! for BAO use
+        '''
+        volume averaged distance
+        '''
+        return (z*self.D_Hz(z)*self.D_M(z)**2)**(1.0/3.0)
+    
+    def rd(self, Omu, Oba):
+        '''
+        Use the numerically calibrated approximation to calculate the sound horizon at the drag epoch. Added two parameters Omu and Oba have prior from CMB or other experiments. This function is only for BAO use. For some models with different neutrino theories, it should be changed.
+        '''
+        self.Omu = float(Omu)
+        self.Oba = float(Oba)
+        return 55.154*np.exp(-72.3*(self.Omu*self.h**2.0+0.0006)**2.0)/(self.Om0*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807
 
     def mu(self, z):
         '''
@@ -652,6 +709,7 @@ class q_CPL(q_Linear):
         self.q0 = float(q0)
         self.q1 = float(q1)
         self.h = float(h)
+        self.modelN = 3
     '''
     The following part is model dependent: the expansion factor E(z) and the equation of state of the dark energy
     '''
@@ -689,6 +747,7 @@ class EDE(CG):
         self.w0 = float(w0)
         self.Od0 = float(1.0-self.Om0)
         self.h = float(h)
+        self.modelN = 4
     '''
         The following part is model dependent: the expansion factor E(z) and the equation of state of the dark energy
         '''
