@@ -12,7 +12,6 @@ except ImportError:
 
 import numpy as np
 import scipy as sp
-import matplotlib.pyplot as plt
 import math
 import de_hh
 
@@ -51,7 +50,7 @@ class MCMC:
         self.Oba = self.param[-1]
         self.mcmc_rd = self.mcmcmodel.rd(self.Onu, self.Oba)
         
-        self.lp = self.lnprior(self.param)
+        self.lp = self.lnprior(self.modelname, self.param)
             #if not np.isfinite(self.lp):
             #return -np.inf
         self.lp2 = self.lnprior2(self.param)
@@ -79,9 +78,9 @@ class MCMC:
             self.Dm_th = self.func_DM(self.modelname, self.zm, self.param)/self.mcmc_rd
             self.Dv_th = self.func_DV(self.modelname, self.zv, self.param)/self.mcmc_rd
             
-            self.chi2h = self.chi2(self.Dh_th/150, self.Dh, self.icovh)
-            self.chi2m = self.chi2(self.Dm_th/150, self.Dm ,self.icovm)
-            self.chi2v = self.chi2(self.Dv_th/150, self.Dv, self.icovv)
+            self.chi2h = self.chi2(self.Dh_th, self.Dh, self.icovh)
+            self.chi2m = self.chi2(self.Dm_th, self.Dm ,self.icovm)
+            self.chi2v = self.chi2(self.Dv_th, self.Dv, self.icovv)
             
             return -(self.chi2h + self.chi2m + self.chi2v)+self.lp+self.lp2
         
@@ -120,6 +119,9 @@ class MCMC:
             
             self.dif = self.newlnprob - self.oldlnprob
             
+            if np.isinf(self.newlnprob) and np.isinf(self.oldlnprob):
+                continue
+            
             if self.dif < 0.0 :
                 
                 self.aran = np.random.random(1)
@@ -130,7 +132,7 @@ class MCMC:
                     self.p = self.q
                     self.oldlnprob = self.newlnprob
                     self.acc += 1
-                    self.chain_i = np.hstack((np.array([int(self.acc), int(i), -self.oldlnprob]), [j for j in self.p]))
+                    self.chain_i = np.hstack((np.array([int(self.acc), int(i)+1, -self.oldlnprob]), [j for j in self.p]))
                     self.chain = np.vstack((self.chain, self.chain_i))
                     print(self.acc, i, -self.oldlnprob, [j for j in self.p])
                     
@@ -142,26 +144,32 @@ class MCMC:
                 self.p = self.q
                 self.oldlnprob = self.newlnprob
                 self.acc += 1
-                self.chain_i = np.hstack((np.array([int(self.acc), int(i), -self.oldlnprob]), [j for j in self.p]))
+                self.chain_i = np.hstack((np.array([int(self.acc), int(i)+1, -self.oldlnprob]), [j for j in self.p]))
                 self.chain = np.vstack((self.chain, self.chain_i))
                 print(self.acc, i, -self.oldlnprob, [j for j in self.p])
                     
         return self.chain
 
-    def Nsample(self, modelname, NWalker, p0, Nstep, z, obs, icov):
+    def Nsample(self, modelname, NWalker, p00, Nstep, z, obs, icov):
         '''
         Almost the same as the function sample, but it can realise a number of chains which is controlled by NWalker.
         '''
         self.modelname = str(modelname)
         self.NWalker = NWalker
-        self.p0 = np.array(p0)
+        self.p00 = np.array(p00)
         self.Nstep = Nstep
         self.zN = z
         self.obsN = obs
         self.icovN = icov
             
         self.Nchain = []
+        
+        if self.NWalker != len(self.p00):
+            print("Error: The number of initial conditions and the number of walkers are not consistent.")
+            exit()
+        
         for ii in range(self.NWalker):
+            self.p0 = self.p00[ii]
             self.Nchain.append(self.sample(self.modelname, self.p0, self.Nstep, self.zN, self.obsN, self.icovN))
         
         return self.Nchain
@@ -223,33 +231,189 @@ class MCMC:
         self.param = param
         
         if self.modelname == 'LCDM':
-            return de_hh.LCDM(self.param[0], self.param[1], self.param[2], self.param[3])
+            return de_hh.LCDM(self.param[0], self.param[1], self.param[2])
+        
+        elif self.modelname == 'Flat_LCDM':
+            return de_hh.Flat_LCDM(self.param[0], self.param[1])
         
         elif self.modelname == 'Topo_defc_2':
             return de_hh.Topo_defc_2(self.param[0], self.param[1], self.param[2])
         
+        elif self.modelname == 'Phan_DE':
+            return de_hh.Phan_DE(self.param[0], self.param[1], self.param[2])
+        
         elif self.modelname == 'XCDM':
             return de_hh.XCDM(self.param[0], self.param[1], self.param[2], self.param[3])
+        
+        elif self.modelname == 'CG':
+            return de_hh.CG(self.param[0], self.param[1], self.param[2], self.param[3])
+        
+        elif self.modelname == 'GCG':
+            return de_hh.GCG(self.param[0], self.param[1], self.param[2], self.param[3], self.param[4])
+        
+        elif self.modelname == 'W_Linear':
+            return de_hh.W_Linear(self.param[0], self.param[1], self.param[2], self.param[3], self.param[4])
         
         elif self.modelname == 'W_CPL':
             return de_hh.W_CPL(self.param[0], self.param[1], self.param[2], self.param[3], self.param[4])
         
+        elif self.modelname == 'DE_Casimir':
+            return de_hh.DE_Casimir(self.param[0], self.param[1], self.param[2], self.param[3])
+        
+        elif self.modelname == 'DE_Card':
+            # this model is a little special, since it includes radiation. need to check
+            return de_hh.DE_Card(self.param[0], self.param[1], self.param[2])
+        
         elif self.modelname == 'DGP':
             return de_hh.DGP(self.param[0], self.param[1], self.param[2])
-        
+
+        elif self.modelname == 'DDG':
+            return de_hh.DDG(self.param[0], self.param[1], self.param[2], self.param[3])
+
+        elif self.modelname == 'RS':
+            return de_hh.RS(self.param[0], self.param[1], self.param[2], self.param[3], self.param[4])
+
+        elif self.modelname == 'RSL':
+            return de_hh.RSL(self.param[0], self.param[1], self.param[2], self.param[3], self.param[4])
+
+        # the following two braneworld models should have additional priors, refer to de_hh.py
+        elif self.modelname == 'S_Brane1':
+            return de_hh.S_Brane1(self.param[0], self.param[1], self.param[2], self.param[3], self.param[4])
+
+        elif self.modelname == 'S_Brane2':
+            return de_hh.S_Brane2(self.param[0], self.param[1], self.param[2], self.param[3], self.param[4])
+
+        elif self.modelname == 'q_Linear':
+            return de_hh.q_Linear(self.param[0], self.param[1], self.param[2])
+
+        elif self.modelname == 'q_CPL':
+            return de_hh.q_CPL(self.param[0], self.param[1], self.param[2])
+
+        elif self.modelname == 'EDE':
+            return de_hh.EDE(self.param[0], self.param[1], self.param[2], self.param[3])
+
+
+
+
         else:
             print("I can't find your model")
             exit()
 
 
-    def lnprior(self, param):
+    def lnprior(self, modelname, param):
         '''
         Top-hat prior of the parameters, it strongly depends on cosmological model. If the model changes, the prior also need to be changed.
         '''
+        self.modelname = str(modelname)
         self.param = param
-        if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and 0 < self.param[5] < 1.0:
-            return 0.0
-        return -np.inf
+        
+        if self.modelname == 'LCDM':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+    
+        elif self.modelname == 'Flat_LCDM':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+
+        elif self.modelname == 'Topo_defc_2D':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+            
+        elif self.modelname == 'Phan_DE':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'XCDM':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and -3.0 < self.param[2] < 0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'CG':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 2.0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'GCG':  #  astro-ph/0306319
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 2.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'W_Linear':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and -10 < self.param[2] < 0 and -10 < self.param[3] < 10 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'W_CPL':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and -10 < self.param[2] < 0 and -10 < self.param[3] < 10 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'DE_Casimir':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'DE_Card':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+
+        elif self.modelname == 'DGP':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+
+        #elif self.modelname == 'DDG':   #  Problem: need to check.
+
+        elif self.modelname == 'RS':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname =='RSL':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'S_Brane1':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and self.param[0]+self.param[1]+self.param[2]+2*self.param[3] >= 1.0and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'S_Brane2':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and self.param[0]+self.param[1]+self.param[2]+2*self.param[3] <= 1.0and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'q_Linear':
+            if -10 < self.param[0] < 10 and -10 < self.param[1] < 10 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+        elif self.modelname == 'q_CPL':
+            if -10 < self.param[0] < 10 and -10 < self.param[1] < 10 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+    
+        elif self.modelname == 'EDE':
+            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and -3.0 < self.param[2] < 1 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+                return 0.0
+            return -np.inf
+                
+                
+                
+        else:
+            print("I can't find your model")
+            exit()
+
+
+
+
+
 
     def lnprior2(self, param):
         '''
