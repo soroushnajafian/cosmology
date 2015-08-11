@@ -134,14 +134,23 @@ class Quintessence:
         '''
         return (z*self.D_Hz(z)*self.D_M(z)**2)**(1.0/3.0)
 
-    def rd(self, Omu, Oba):
+    def rd(self, Onu, Oba):
         '''
-        Use the numerically calibrated approximation to calculate the sound horizon at the drag epoch. Added two parameters Omu and Oba have prior from CMB or other experiments. This function is only for BAO use. For some models with different neutrino theories, it should be changed.
+        Use the numerically calibrated approximation to calculate the sound horizon at the drag epoch. Added two parameters Onu and Oba have prior from CMB or other experiments. This function is only for BAO use. For some models with different neutrino theories, it should be changed.
             '''
-        self.Omu = float(Omu)
+        self.h = abs(self.h)
+        self.Onu = float(Onu)
         self.Oba = float(Oba)
         
-        return 55.154*np.exp(-72.3*(self.Omu*self.h**2.0+0.0006)**2.0)/(self.Om0*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807
+        return 55.154*np.exp(-72.3*(self.Onu*self.h**2.0+0.0006)**2.0)/(self.Om0*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807
+    
+    def rd_nu(self, Onu, Oba, Neff):
+        
+        self.h = abs(self.h)
+        self.Onu = abs(float(Onu))
+        self.Oba = abs(float(Oba))
+        self.Neff = float(Neff)
+        return 56.067*np.exp(-49.7*(self.Onu*self.h**2.0+0.002)**2.0)/(abs(self.Om0)*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807/(1+(self.Neff-3.406)/30.60)
 
     def mu(self, z):
         '''

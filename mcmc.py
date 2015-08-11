@@ -308,52 +308,52 @@ class MCMC:
         self.param = param
         
         if self.modelname == 'LCDM':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 1.0 and 0 <= self.param[-2]*self.param[-3]**2 <= 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
     
         elif self.modelname == 'Flat_LCDM':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and 0 <= self.param[1] <= 1.0 and 0 <= self.param[-2]*self.param[-3]**2 <= 0.0107*0.6 and 0 <= self.param[-1] <= self.param[0]:
                 return 0.0
             return -np.inf
 
         elif self.modelname == 'Topo_defc_2D':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
             
         elif self.modelname == 'Phan_DE':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
         elif self.modelname == 'XCDM':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and -3.0 < self.param[2] < 0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and -3.0 < self.param[2] < 0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
         elif self.modelname == 'CG':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 2.0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 2.0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
         elif self.modelname == 'GCG':  #  astro-ph/0306319
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 2.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 2.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
         elif self.modelname == 'W_Linear':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and -10 < self.param[2] < 0 and -10 < self.param[3] < 10 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and -10 < self.param[2] < 0 and -10 < self.param[3] < 10 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
         elif self.modelname == 'W_CPL':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and -10 < self.param[2] < 0 and -10 < self.param[3] < 10 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and -10 < self.param[2] < 0 and -10 < self.param[3] < 10 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
         elif self.modelname == 'DE_Casimir':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
@@ -370,22 +370,22 @@ class MCMC:
         #elif self.modelname == 'DDG':   #  Problem: need to check.
 
         elif self.modelname == 'RS':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
         elif self.modelname =='RSL':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
         elif self.modelname == 'S_Brane1':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and self.param[0]+self.param[1]+self.param[2]+2*self.param[3] >= 1.0and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and self.param[0]+self.param[1]+self.param[2]+2*self.param[3] >= 1.0and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 
         elif self.modelname == 'S_Brane2':
-            if 0 < self.param[0] < 1.0 and 0 < self.param[1] < 1.0 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and self.param[0]+self.param[1]+self.param[2]+2*self.param[3] <= 1.0and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
+            if 0 < self.param[0] < 1.0 and -0.5 < self.param[1] < 0.5 and 0 < self.param[2] < 1.0 and 0 < self.param[3] < 1.0 and 0 < self.param[4] < 1.0 and self.param[0]+self.param[1]+self.param[2]+2*self.param[3] <= 1.0and 0 < self.param[-2]*self.param[-3]**2 < 0.0107*0.6 and 0 < self.param[-1] < self.param[0]:
                 return 0.0
             return -np.inf
                 

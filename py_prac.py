@@ -9,24 +9,24 @@ from de_plot import DE_vis
 ####################################################
 #  Define your model by specifying the parameters
 
-LCDM = de_hh.LCDM(0.3, 0.0001, 0.0005, 0.7)
+LCDM = de_hh.LCDM(0.3, 0.0, 0.0005, 0.7)
 #TOPO = de_hh.Topo_defc_2D(0.3, 0.0001, 0.7)
 #Phan = de_hh.Phan_DE(0.3, 0.0001, 0.7)
-XCDM = de_hh.XCDM(0.3, 0.0001, -0.8, 0.7)
+XCDM = de_hh.XCDM(0.3, 0.0, -0.9, 0.7)
 #CG = de_hh.CG(0.3, 0.0001, 2, 0.7)
-GCG = de_hh.GCG(0.3, 0.0001, 0.8, 0.0, 0.7)
+GCG = de_hh.GCG(0.3, 0.0, 0.98, 0.93, 0.7)
 #W_Linear = de_hh.W_Linear(0.3, 0.0001, -0.9, 0.2, 0.7)
-W_CPL = de_hh.W_CPL(0.3, 0.0001, -0.9, 0.1, 0.7)
+W_CPL = de_hh.W_CPL(0.3, 0.0001, -1.0, 0.5, 0.7)
 #DE_Casimir = de_hh.DE_Casimir(0.3, 0.0001, 0.02, 0.7)
-DE_Card = de_hh.DE_Card(0.3, 0.0005, 0.8, 0.7)
-DGP = de_hh.DGP(0.3, 0.002, 0.7)
+DE_Card = de_hh.DE_Card(0.3, 0.0005, 0.38, 0.7)
+DGP = de_hh.DGP(0.3, 0.14, 0.7)
 #DDG = de_hh.DDG(0.3, 0.4, 0.7)
 #RS = de_hh.RS(0.3, 0.0001, 0.05, 0.7)
 RSL = de_hh.RSL(0.3, 0.0001, 0.05, 0.2, 0.7)
-S_Brane1 = de_hh.S_Brane1(0.3, 0.0001, 0.02, 1, 0.7)
+S_Brane1 = de_hh.S_Brane1(0.3, 0.0, 0.2, 1, 0.7)
 #S_Brane2 = de_hh.S_Brane2(0.3, 0.0001, 0.02, 0.1, 0.7)
 #q_Linear = de_hh.q_Linear(-0.4, 0.3, 0.7)
-q_CPL = de_hh.q_CPL(-0.4, 0.3, 0.7)
+q_CPL = de_hh.q_CPL(-0.6, 1.5, 0.7)
 
 Quintessence = scalar_hh.Quintessence(0.000001, 0.00005, 1, 1, 0.0, 0.7)
 Phantom = scalar_hh.Phantom(0.000001, 0.00005, 1, 1, 0.0, 0.7)
@@ -36,9 +36,9 @@ DiGhCondensate = scalar_hh.DiGhCondensate(0.00085, 0.00085, 1, 0, 0.1, 0.7)
 H0 = 70
 
 z = np.linspace(0, 3, 100)
-'''
-###################################################################################
 
+###################################################################################
+'''
 plt.figure(1)
 plt.xlabel('z')
 plt.ylabel('H(z)')
@@ -119,7 +119,7 @@ plt.figure(4)
 plt.xlabel('z')
 plt.ylabel('$w_{de}$(z)')
 plt.xlim([0,3])
-plt.ylim([-1.5,0])
+plt.ylim([-1.5,01])
 
 
 w = np.array(map(LCDM.w_de, z))
@@ -144,7 +144,7 @@ plt.figure(5)
 plt.xlabel('z')
 plt.ylabel('$w_{de}$(z)')
 plt.xlim([0,3])
-plt.ylim([-1.5,0])
+plt.ylim([-1.5,01])
 
 
 w = np.array(map(DE_Card.w_de, z))
@@ -162,14 +162,14 @@ w_S, = plt.plot(z, w, 'k', label='Shtanov braneworld')
 #w = np.array(map(q_CPL.w_de, z))
 #w_q, = plt.plot(z, w, 'c', label='CPL deceleration')
 
-plt.legend(handles=[w_C, w_D, w_R, w_S], loc=2)
+plt.legend(handles=[w_C, w_D, w_R, w_S], loc=4)
 
 ########################################
 plt.figure(6)
 plt.xlabel('z')
 plt.ylabel('$w_{de}$(z)')
 plt.xlim([0,3])
-plt.ylim([-1.5,0])
+plt.ylim([-1.5,01])
 
 
 w = np.array(map(Quintessence.w_de, z))
@@ -188,6 +188,7 @@ w_D, = plt.plot(z, w, 'k', label='Dilatonic Ghost Condensate')
 #w_q, = plt.plot(z, w, 'c', label='CPL deceleration')
 
 plt.legend(handles=[w_Q, w_P, w_T, w_D], loc=2)
+
 
 ###################################################################################
 plt.figure(7)
@@ -211,7 +212,7 @@ q_W, = plt.plot(z, q, 'k', label='CPL')
 q = np.array(map(q_CPL.q, z))
 q_q, = plt.plot(z, q, 'c', label='CPL deceleration')
 
-plt.legend(handles=[q_L, q_X, q_G, q_W, q_q], loc=2)
+plt.legend(handles=[q_L, q_X, q_G, q_W, q_q], loc=4)
 
 #####################################
 plt.figure(8)
@@ -232,7 +233,7 @@ q = np.array(map(S_Brane1.q, z))
 q_S, = plt.plot(z, q, 'k', label='Shtanov braneworld')
 
 
-plt.legend(handles=[q_C, q_D, q_R, q_S], loc=2)
+plt.legend(handles=[q_C, q_D, q_R, q_S], loc=4)
 
 ####################################
 plt.figure(9)
@@ -253,6 +254,7 @@ q = np.array(map(DiGhCondensate.q, z))
 q_D, = plt.plot(z, q, 'k', label='Dilatonic Ghost Condensate')
 
 plt.legend(handles=[q_Q, q_P, q_T, q_D], loc=2)
+
 
 ####################################################################################
 plt.figure(10)
@@ -385,7 +387,7 @@ z, D = DiGhCondensate.D_solu(zz)[:2]
 D_D, = plt.plot(z, D, 'k', label='Dilatonic Ghost Condensate')
 
 plt.legend(handles=[D_Q, D_P, D_T, D_D], loc=1)
-'''
+
 ######################################################################################
 plt.figure(16)
 plt.xlabel('z')
@@ -454,11 +456,16 @@ plt.legend(handles=[f_Q, f_P, f_T, f_D], loc=4)
 
 ############################################################
 
+'''
 
-
-
-
-
+EDE = de_hh.EDE(0.3, 0.1, -1.0, 0.7)
+H = H0*np.array(map(EDE.E, z))
+plt.figure(1)
+plt.xlabel('z')
+plt.ylabel('H(z)')
+plt.xlim([0,3])
+plt.ylim([0,400])
+plt.plot(z, H, 'b', label='$\Lambda$ CDM')
 
 
 

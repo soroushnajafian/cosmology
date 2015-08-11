@@ -22,16 +22,15 @@ class LCDM:
     This is the class for standard \LambdaCDM model.
     The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
                           Ok0: the current energy density fraction of curvature
-                          Or0: the current energy density of radiation
                           h: dimensionless Hubble constant
     '''
-    def __init__(self, Om0, Ok0, Or0, h):
+    def __init__(self, Om0, Ok0, h):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
-        self.Or0 = float(Or0)
+        self.Or0 = float(0)
         self.Ode0 = float(1-self.Om0-self.Or0-self.Ok0)
         self.h = float(h)
-        self.modelN = 4
+        self.modelN = 3
     '''
     The following part is model dependent: the expansion factor E(z) and the equation of state of the dark energy
     '''
@@ -124,13 +123,23 @@ class LCDM:
         '''
         return (z*self.D_Hz(z)*self.D_M(z)**2)**(1.0/3.0)
     
-    def rd(self, Omu, Oba):
+    def rd(self, Onu, Oba):
         '''
-        Use the numerically calibrated approximation to calculate the sound horizon at the drag epoch. Added two parameters Omu and Oba have prior from CMB or other experiments. This function is only for BAO use. For some models with different neutrino theories, it should be changed.
+        Use the numerically calibrated approximation to calculate the sound horizon at the drag epoch. Added two parameters Onu and Oba have prior from CMB or other experiments. This function is only for BAO use. For some models with different neutrino theories, it should be changed.
         '''
-        self.Omu = float(Omu)
-        self.Oba = float(Oba)
-        return 55.154*np.exp(-72.3*(self.Omu*self.h**2.0+0.0006)**2.0)/(self.Om0*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807
+        self.h = abs(self.h)
+        self.Onu = abs(float(Onu))
+        self.Oba = abs(float(Oba))
+        return 55.154*np.exp(-72.3*(self.Onu*self.h**2.0+0.0006)**2.0)/(abs(self.Om0)*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807
+    
+    def rd_nu(self, Onu, Oba, Neff):
+        
+        self.h = abs(self.h)
+        self.Onu = abs(float(Onu))
+        self.Oba = abs(float(Oba))
+        self.Neff = float(Neff)
+        return 56.067*np.exp(-49.7*(self.Onu*self.h**2.0+0.002)**2.0)/(abs(self.Om0)*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807/(1+(self.Neff-3.406)/30.60)
+
 
     def mu(self, z):
         '''
@@ -205,7 +214,19 @@ class LCDM:
                 
         return self.zs, self.Ds, self.D1s, self.fs
 
+class Flat_LCDM(LCDM):
+    '''
+    This is the flat LCDM model. It has only two input parameters: Om0 and h.
+    '''
+    def __init__(self, Om0, h):
+        self.Om0 = float(Om0)
+        self.h = float(h)
+        self.Ok0 = float(0)
+        self.Ode0 = float(1-self.Om0)
+        self.modelN = 2
 
+    def E(self, z):
+        return (self.Om0*(1+z)**3+self.Ode0)**0.5
 
 
 class Topo_defc_2D(LCDM):
@@ -384,7 +405,7 @@ class DE_Casimir(CG):
         self.Om0 = float(Om0)
         self.Ok0 = float(Ok0)
         self.Ocass0 = float(Ocass0)
-        self.Ode0 = float(1-self.Om0-self.Ok0-self.Ocass0)
+        self.Ode0 = float(1-self.Om0-self.Ok0+self.Ocass0)
         self.h = float(h)
         self.modelN = 4
 
@@ -398,7 +419,7 @@ class CGB:
 
 class DE_Card(LCDM):
     ## not from 0604327 (it might be wrong), we use:http://iopscience.iop.org/0004-637X/588/1/1/fulltext/57352.text.html
-    ## This is a special model that has nonzero Or0 (radiation is included)
+    ## This is a special model that has nonzero Or0 (radiation is included) NB ! the radiatioin is ignored now. (Aug 8.)
     '''
     This is the class for the Cardissian expansion cosmology.
     The input parameters: Om0: the current energy density fraction of matter including baryonic matter and dark matter
@@ -407,13 +428,13 @@ class DE_Card(LCDM):
                           n: constant related to the Cardassian term in the Friedmann equation
                           h: dimensionless Hubble constant
     '''
-    def __init__(self, Om0, Or0, n, h):
+    def __init__(self, Om0, n, h):
         self.Ok0 = float(0)  # assume the curvature is zero
         self.Om0 = float(Om0)
-        self.Or0 = float(Or0)
+        self.Or0 = float(0)
         self.n = float(n)
         self.h = float(h)
-        self.modelN = 4
+        self.modelN = 3
 
     def E(self, z):
         return (self.Om0*(1+z)**4*(1/(1+z)+self.Or0/self.Om0+(1+z)**(4*self.n-4)*(1-self.Or0-self.Om0)/self.Om0*((1/(1+z)+self.Or0/self.Om0)/(1+self.Or0/self.Om0))**self.n))**0.5
@@ -468,7 +489,7 @@ class DDG(CG): # according to the paper, redefine r0h0 = r0*H0 to get the constr
         self.modelN = 3
 
     def E(self, z):
-        return -0.5/self.r0h0+np.sqrt(self.Om0*(1+z)**3+self.Ode0+1/4/self.r0h0**2)
+        return (-0.5/self.r0h0+np.sqrt(self.Om0*(1+z)**3+self.Ode0+1/4/self.r0h0**2))**0.5
 
 class RS(LCDM):
     '''
@@ -494,8 +515,10 @@ class RS(LCDM):
             The energy component of dark energy
             '''
         return self.E(z)**2-self.Om0*(1+z)**3+self.Odr0*(1+z)**4  # Note: different from GC, GCG and DE_Card
+    
     def ODEp(self, z):
         return derivative(self.ODE, z, dx = 1e-6)
+    
     def w_de(self, z):
         '''
             The "equivalent" equation of state of dark energy
@@ -679,13 +702,22 @@ class q_Linear:
         '''
         return (z*self.D_Hz(z)*self.D_M(z)**2)**(1.0/3.0)
     
-    def rd(self, Omu, Oba):
+    def rd(self, Onu, Oba):
         '''
-        Use the numerically calibrated approximation to calculate the sound horizon at the drag epoch. Added two parameters Omu and Oba have prior from CMB or other experiments. This function is only for BAO use. For some models with different neutrino theories, it should be changed.
+        Use the numerically calibrated approximation to calculate the sound horizon at the drag epoch. Added two parameters Onu and Oba have prior from CMB or other experiments. This function is only for BAO use. For some models with different neutrino theories, it should be changed.
         '''
-        self.Omu = float(Omu)
-        self.Oba = float(Oba)
-        return 55.154*np.exp(-72.3*(self.Omu*self.h**2.0+0.0006)**2.0)/(self.Om0*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807
+        self.h = abs(self.h)
+        self.Onu = abs(float(Onu))
+        self.Oba = abs(float(Oba))
+        return 55.154*np.exp(-72.3*(self.Onu*self.h**2.0+0.0006)**2.0)/(abs(self.Om0)*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807
+    
+    def rd_nu(self, Onu, Oba, Neff):
+        
+        self.h = abs(self.h)
+        self.Onu = abs(float(Onu))
+        self.Oba = abs(float(Oba))
+        self.Neff = float(Neff)
+        return 56.067*np.exp(-49.7*(self.Onu*self.h**2.0+0.002)**2.0)/(abs(self.Om0)*self.h**2)**0.25351/(self.Oba*self.h**2)**0.12807/(1+(self.Neff-3.406)/30.60)
 
     def mu(self, z):
         '''
